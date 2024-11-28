@@ -1,2 +1,5 @@
 debug/
 target/
+.idea/
+*DS_Store
+.bsp/
