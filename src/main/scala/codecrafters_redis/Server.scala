@@ -26,7 +26,7 @@ object Server {
         } else {
           println(s"Received: $message")
           if (message == "PING") {
-            out.println("+PONG\r") // Respond to ping
+            out.println("+PONG\r")
           }
         }
       }
