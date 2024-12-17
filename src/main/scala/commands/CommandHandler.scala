@@ -2,6 +2,8 @@ package commands
 
 import parsers.ParsedCommand
 
+import java.util.logging.Logger
+
 trait CommandHandler {
   def handle(): String
 }
@@ -20,7 +22,13 @@ class ECHOHandler(DBClient: db.DBClient, parsedCommand: ParsedCommand) extends C
 
 class SETHandler(DBClient: db.DBClient, parsedCommand: ParsedCommand) extends CommandHandler {
   override def handle(): String = {
-    DBClient.set(parsedCommand.args(0), parsedCommand.args(1))
+    var TTL: Long = -1
+    for (i <- 2 until parsedCommand.args.length) {
+      if (parsedCommand.args(i) == "px") {
+        TTL = parsedCommand.args(i + 1).toLong
+      }
+    }
+    DBClient.set(parsedCommand.args(0), parsedCommand.args(1), TTL)
     s"+OK\r\n"
   }
 }

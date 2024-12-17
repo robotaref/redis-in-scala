@@ -1,12 +1,12 @@
 package db
 
-class DBValue(var value: String, var ttl: Long) {
+class DBValue(var value: String, var et: Long) {
 }
 
 trait DBClient {
   def get(key: String): String
 
-  def set(key: String, value: String): Unit
+  def set(key: String, value: String, expire_time: Long): Unit
 }
 
 
@@ -14,13 +14,21 @@ class MemoryDBClient extends DBClient {
   private val _db = scala.collection.mutable.HashMap[String, DBValue]()
 
   override def get(key: String): String = {
-    _db.get(key) match {
-      case Some(value) => value.value
+    val returnValue = _db.get(key)
+    returnValue match {
+      case Some(value) =>
+        if (value.et != -1 && value.et < System.currentTimeMillis()) {
+          _db.remove(key)
+          ""
+        } else {
+          value.value
+        }
       case None => ""
     }
   }
 
-  override def set(key: String, value: String): Unit = {
-    _db(key) = new DBValue(value, -1)
+  override def set(key: String, value: String, expireTime: Long): Unit = {
+    val usedExpireTime = if (expireTime == -1) -1 else System.currentTimeMillis() + expireTime
+    _db(key) = new DBValue(value, usedExpireTime)
   }
 }
