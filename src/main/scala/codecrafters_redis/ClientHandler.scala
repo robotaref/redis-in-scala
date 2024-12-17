@@ -6,7 +6,7 @@ import java.io.{BufferedReader, IOException, InputStreamReader}
 import java.net.Socket
 
 
-class ClientHandler(clientSocket: Socket) extends Runnable {
+class ClientHandler(DBClient: db.DBClient, clientSocket: Socket) extends Runnable {
   override def run(): Unit = {
     val in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream))
     val buffer = new Array[Char](1024)
@@ -20,7 +20,7 @@ class ClientHandler(clientSocket: Socket) extends Runnable {
           val message = new String(buffer, 0, bytesRead)
           val parser = new CommandParser()
           val parsedCommand = parser.parse(message)
-          val handler = new CommandHandlerFactory().getHandler(parsedCommand)
+          val handler = new CommandHandlerFactory().getHandler(DBClient, parsedCommand)
           val response = handler.handle()
           clientSocket.getOutputStream.write(response.getBytes())
         }
