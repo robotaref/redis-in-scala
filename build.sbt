@@ -10,5 +10,6 @@ lazy val root = (project in file("."))
     name := "codecrafter-redis",
     // List your dependencies here
     libraryDependencies ++= Seq(
+      "com.github.scopt" %% "scopt" % "4.1.0",
     )
   )
