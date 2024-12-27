@@ -18,10 +18,12 @@ object Config {
 
   def loadConfig(args: Array[String]): Unit = {
     for (i <- args.indices) {
-      if (args(i) == "--dir") {
-        Config.dir = args(i + 1)
-      } else if (args(i) == "--dbfilename") {
-        Config.DBFileName = args(i + 1)
+      args(i) match {
+        case "--dir" => dir = args(i + 1)
+        case "--dbfilename" => DBFileName = args(i + 1)
+        case "--host" => host = args(i + 1)
+        case "--port" => port = args(i + 1).toInt
+        case _ =>
       }
     }
   }

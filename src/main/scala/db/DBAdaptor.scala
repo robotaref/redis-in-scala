@@ -22,7 +22,7 @@ object OpCode {
 
   final case object UNKNOWN extends OpCode
 
-  def from_int(i: Int) = i match {
+  def from_int(i: Int): OpCode = i match {
     case 0xff => EOF
     case 0xfe => SELECTDB
     case 0xfd => EXPIRETIME
