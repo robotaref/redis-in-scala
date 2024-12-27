@@ -6,6 +6,8 @@ object Config {
   var host: String = "localhost"
   var port: Int = 6379
   var role: String = "master"
+  var masterHost: Option[String] = None
+  var masterPort: Option[Int] = None
 
   def get(key: String): String = {
     key match {
@@ -13,6 +15,9 @@ object Config {
       case "DBFileName" => DBFileName
       case "host" => host
       case "port" => port.toString
+      case "role" => role
+      case "master-host" => masterHost.toString
+      case "master-port" => masterPort.toString
       case _ => ""
     }
   }
@@ -24,6 +29,11 @@ object Config {
         case "--dbfilename" => DBFileName = args(i + 1)
         case "--host" => host = args(i + 1)
         case "--port" => port = args(i + 1).toInt
+        case "--replicaof" =>
+          role = "slave"
+          val relatedMaster = args(i + 1).split(" ")
+          masterHost = Some(relatedMaster(0))
+          masterPort = Some(relatedMaster(1).toInt)
         case _ =>
       }
     }
