@@ -100,6 +100,24 @@ class INFOHandler(parsedCommand: ParsedCommand) extends CommandHandler {
   }
 }
 
+class REPLCONFHandler(parsedCommand: ParsedCommand) extends CommandHandler {
+  override def handle(): String = {
+    println("in repl handler", parsedCommand.args(0))
+    parsedCommand.args(0) match {
+      case "listening-port" =>
+//        config.port = parsedCommand.args(1).toInt
+        "OK"
+      case "capa" =>
+        if (parsedCommand.args(1) == "psync2") {
+          "OK"
+        } else {
+          "-ERR unsupported capability"
+        }
+      case _ => "-ERR unsupported subcommand"
+    }
+  }
+}
+
 class CommandHandlerFactory {
   private val commandHandlers: Map[String, ParsedCommand => CommandHandler] = Map(
     "PING" -> (new PINGHandler(_)),
@@ -111,6 +129,7 @@ class CommandHandlerFactory {
     "SAVE" -> (new SAVEHandler(_)),
     "LOAD" -> (new LOADHandler(_)),
     "INFO" -> (new INFOHandler(_)),
+    "REPLCONF" -> (new REPLCONFHandler(_)),
   )
 
   def getHandler(parsedCommand: ParsedCommand): CommandHandler = {

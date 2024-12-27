@@ -31,23 +31,36 @@ object Server {
   private def initiateReplication(): Unit = {
     val host = Config.masterHost.get
     val port = Config.masterPort.get
+    val clientSocket = new Socket(host, port)
+    val out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream), true)
+    val in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream))
+    ensurePing(in, out)
+    ensureReplConf(in, out)
+  }
+
+  private def ensurePing(in: BufferedReader, out: PrintWriter): Unit = {
+    val response: String = callMaster(in, out, Array("PING"))
+  }
+
+  private def callMaster(in: BufferedReader, out: PrintWriter, messages: Array[String]): String = {
 
     try {
-      val clientSocket = new Socket(host, port)
-      val out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream), true)
-      val in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream))
-
-      val pingMessage = BulkStringParser.parse(Array("PING"))
+      val pingMessage = BulkStringParser.parse(messages)
       out.print(pingMessage)
       out.flush()
-      val response = in.readLine()
-      if (response != BulkStringParser.parse("PONG")) {
-        throw new Exception("Master is not responding")
-      }
-      clientSocket.close()
+      val buffer = new Array[Char](10240)
+      val bytesRead = in.read(buffer)
+      val message = new String(buffer, 0, bytesRead)
     } catch {
       case e: Exception =>
         e.printStackTrace()
     }
+    ""
+  }
+
+  private def ensureReplConf(in: BufferedReader, out: PrintWriter): Unit = {
+    callMaster(in, out, Array("REPLCONF", "listening-port", Config.port.toString))
+    callMaster(in, out, Array("REPLCONF", "capa", "psync2"))
   }
 }
+
