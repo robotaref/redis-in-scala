@@ -2,23 +2,23 @@ package commands
 
 import config.Config
 import db.DBAdaptor
-import parsers.ParsedCommand
+import parsers.{BulkStringParser, ParsedCommand}
 
 import java.nio.file.Path
 
 trait CommandHandler {
-  def handle(): String
+  def handle(): Any
 }
 
 class PINGHandler(parsedCommand: ParsedCommand) extends CommandHandler {
   override def handle(): String = {
-    "+PONG\r\n"
+   "PONG"
   }
 }
 
 class ECHOHandler(parsedCommand: ParsedCommand) extends CommandHandler {
   override def handle(): String = {
-    s"+${parsedCommand.args(0)}\r\n"
+    s"${parsedCommand.args(0)}"
   }
 }
 
@@ -31,7 +31,7 @@ class SETHandler(parsedCommand: ParsedCommand) extends CommandHandler {
       }
     }
     DBAdaptor.set(parsedCommand.args(0), parsedCommand.args(1), TTL)
-    s"+OK\r\n"
+    "OK"
   }
 }
 
@@ -39,54 +39,62 @@ class GETHandler(parsedCommand: ParsedCommand) extends CommandHandler {
   override def handle(): String = {
     val value = DBAdaptor.get(parsedCommand.args(0))
     value match {
-      case "" => "$-1\r\n"
-      case _ => s"$$${value.length}\r\n$value\r\n"
+      case "" => ""
+      case _ => value
     }
   }
 }
 
 class CONFIGHandler(parsedCommand: ParsedCommand) extends CommandHandler {
-  override def handle(): String = {
+  override def handle(): Any = {
     val config = Config
     parsedCommand.args(0) match {
       case "GET" =>
         if (parsedCommand.args.length != 2) {
-          return "-ERR wrong number of arguments for 'CONFIG' command\r\n"
+          return "-ERR wrong number of arguments for 'CONFIG' command"
         }
         val searchedKey = parsedCommand.args(1)
         val answer = config.get(searchedKey)
         answer match {
-          case "" => "$-1\r\n"
-          case _ => s"*2\r\n$$${searchedKey.length}\r\n$searchedKey\r\n$$${answer.length}\r\n$answer\r\n"
+          case "" => Array()
+          case _ => Array(searchedKey, answer)
         }
-      case _ => "$-1\r\n"
+      case _ => Array()
     }
   }
 }
 
 class KEYSHandler(parsedCommand: ParsedCommand) extends CommandHandler {
-  override def handle(): String = {
+  override def handle(): Array[String] = {
     val keys = DBAdaptor.keys()
-    if (keys.isEmpty) {
-      return "*0\r\n"
-    }
-    println(keys)
-    val response = keys.map(key => s"$$${key.length}\r\n$key\r\n").mkString
-    s"*${keys.length}\r\n$response"
+    keys.toArray
   }
 }
 
 class SAVEHandler(parsedCommand: ParsedCommand) extends CommandHandler {
   override def handle(): String = {
     DBAdaptor.save(Path.of(Config.dir, Config.DBFileName))
-    "+OK\r\n"
+    "OK"
   }
 }
 
 class LOADHandler(parsedCommand: ParsedCommand) extends CommandHandler {
   override def handle(): String = {
     DBAdaptor.load(Path.of(Config.dir, Config.DBFileName))
-    "+OK\r\n"
+    "OK"
+  }
+}
+
+class INFOHandler(parsedCommand: ParsedCommand) extends CommandHandler {
+  private def replication = {
+    s"role:${config.Config.role}"
+  }
+
+  override def handle(): String = {
+    parsedCommand.args(0) match {
+      case "replication" => replication
+      case _ => "-ERR unknown subcommand or wrong number of arguments for 'INFO' command\r\n"
+    }
   }
 }
 
@@ -100,6 +108,7 @@ class CommandHandlerFactory {
     "KEYS" -> (new KEYSHandler(_)),
     "SAVE" -> (new SAVEHandler(_)),
     "LOAD" -> (new LOADHandler(_)),
+    "INFO" -> (new INFOHandler(_)),
   )
 
   def getHandler(parsedCommand: ParsedCommand): CommandHandler = {

@@ -5,6 +5,7 @@ object Config {
   var DBFileName: String = ""
   var host: String = "localhost"
   var port: Int = 6379
+  var role: String = "master"
 
   def get(key: String): String = {
     key match {

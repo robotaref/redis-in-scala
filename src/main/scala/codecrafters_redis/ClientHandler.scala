@@ -1,7 +1,8 @@
 package codecrafters_redis
 
-import parsers.CommandParser
+import parsers.{BulkStringParser, CommandParser}
 import commands.CommandHandlerFactory
+
 import java.io.{BufferedReader, IOException, InputStreamReader}
 import java.net.Socket
 
@@ -21,7 +22,7 @@ class ClientHandler(clientSocket: Socket) extends Runnable {
           val parser = new CommandParser()
           val parsedCommand = parser.parse(message)
           val handler = new CommandHandlerFactory().getHandler(parsedCommand)
-          val response = handler.handle()
+          val response = BulkStringParser.parse(handler.handle())
           clientSocket.getOutputStream.write(response.getBytes())
         }
       }
