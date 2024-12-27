@@ -12,7 +12,7 @@ trait CommandHandler {
 
 class PINGHandler(parsedCommand: ParsedCommand) extends CommandHandler {
   override def handle(): String = {
-   "PONG"
+    "PONG"
   }
 }
 
@@ -87,7 +87,9 @@ class LOADHandler(parsedCommand: ParsedCommand) extends CommandHandler {
 
 class INFOHandler(parsedCommand: ParsedCommand) extends CommandHandler {
   private def replication = {
-    s"role:${config.Config.role}"
+    s"role:${config.Config.role}" +
+      s"master_replid:${config.Config.replicationID}" +
+      s"master_repl_offset:${config.Config.replicationOffset}"
   }
 
   override def handle(): String = {

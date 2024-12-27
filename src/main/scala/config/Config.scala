@@ -8,6 +8,8 @@ object Config {
   var role: String = "master"
   var masterHost: Option[String] = None
   var masterPort: Option[Int] = None
+  var replicationID: String = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb"
+  var replicationOffset: Long = 0
 
   def get(key: String): String = {
     key match {
@@ -18,6 +20,8 @@ object Config {
       case "role" => role
       case "master-host" => masterHost.toString
       case "master-port" => masterPort.toString
+      case "replication-id" => replicationID
+      case "replication-offset" => replicationOffset.toString
       case _ => ""
     }
   }
