@@ -34,8 +34,17 @@ object Server {
     val clientSocket = new Socket(host, port)
     val out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream), true)
     val in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream))
-    ensurePing(in, out)
-    ensureReplConf(in, out)
+    try {
+      ensurePing(in, out)
+      ensureReplConf(in, out)
+      ensurePsync(in, out)
+    } catch {
+      case e: Exception =>
+        e.printStackTrace()
+    } finally {
+      println("Replication started")
+      clientSocket.close()
+    }
   }
 
   private def ensurePing(in: BufferedReader, out: PrintWriter): Unit = {
@@ -61,6 +70,10 @@ object Server {
   private def ensureReplConf(in: BufferedReader, out: PrintWriter): Unit = {
     callMaster(in, out, Array("REPLCONF", "listening-port", Config.port.toString))
     callMaster(in, out, Array("REPLCONF", "capa", "psync2"))
+  }
+
+  private def ensurePsync(in: BufferedReader, out: PrintWriter): Unit = {
+    callMaster(in, out, Array("PSYNC", "?", "-1"))
   }
 }
 

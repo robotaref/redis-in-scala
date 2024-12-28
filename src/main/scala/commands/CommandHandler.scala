@@ -105,7 +105,7 @@ class REPLCONFHandler(parsedCommand: ParsedCommand) extends CommandHandler {
     println("in repl handler", parsedCommand.args(0))
     parsedCommand.args(0) match {
       case "listening-port" =>
-//        config.port = parsedCommand.args(1).toInt
+        //        config.port = parsedCommand.args(1).toInt
         "OK"
       case "capa" =>
         if (parsedCommand.args(1) == "psync2") {
@@ -115,6 +115,12 @@ class REPLCONFHandler(parsedCommand: ParsedCommand) extends CommandHandler {
         }
       case _ => "-ERR unsupported subcommand"
     }
+  }
+}
+
+class PSYNCHandler(parsedCommand: ParsedCommand) extends CommandHandler {
+  override def handle(): String = { // return value should be simpleString
+    s"FULLRESYNC ${Config.replicationID} 0"
   }
 }
 
@@ -130,6 +136,7 @@ class CommandHandlerFactory {
     "LOAD" -> (new LOADHandler(_)),
     "INFO" -> (new INFOHandler(_)),
     "REPLCONF" -> (new REPLCONFHandler(_)),
+    "PSYNC" -> (new PSYNCHandler(_)),
   )
 
   def getHandler(parsedCommand: ParsedCommand): CommandHandler = {
