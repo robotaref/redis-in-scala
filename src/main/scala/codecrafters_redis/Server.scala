@@ -2,7 +2,7 @@ package codecrafters_redis
 
 import config.Config
 import db.DBAdaptor
-import parsers.BulkStringParser
+import parsers.ArrayResponse
 
 import java.io.{BufferedReader, InputStreamReader, OutputStreamWriter, PrintWriter}
 import java.net._
@@ -29,8 +29,8 @@ object Server {
   }
 
   private def initiateReplication(): Unit = {
-    val host = Config.masterHost.get
-    val port = Config.masterPort.get
+    val host = Config.masterConfig.get.masterHost
+    val port = Config.masterConfig.get.masterPort
     val clientSocket = new Socket(host, port)
     val out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream), true)
     val in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream))
@@ -54,12 +54,13 @@ object Server {
   private def callMaster(in: BufferedReader, out: PrintWriter, messages: Array[String]): String = {
 
     try {
-      val pingMessage = BulkStringParser.parse(messages)
-      out.print(pingMessage)
+      val pingMessage = ArrayResponse(messages)
+      out.print(pingMessage.getParsedResponse)
       out.flush()
       val buffer = new Array[Char](10240)
       val bytesRead = in.read(buffer)
       val message = new String(buffer, 0, bytesRead)
+      return message
     } catch {
       case e: Exception =>
         e.printStackTrace()

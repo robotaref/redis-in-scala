@@ -1,13 +1,25 @@
 package config
 
+class MasterConfig {
+  var masterHost: String = ""
+  var masterPort: Int = 0
+  var replicationID: String = ""
+  var replicationOffset: Long = 0
+}
+
+class SlaveConfig {
+  var slaveHost: String = ""
+  var slavePort: Int = 0
+}
+
 object Config {
   var dir: String = ""
   var DBFileName: String = ""
   var host: String = "localhost"
   var port: Int = 6379
   var role: String = "master"
-  var masterHost: Option[String] = None
-  var masterPort: Option[Int] = None
+  var masterConfig: Option[MasterConfig] = None
+  var replicaConfig: Array[SlaveConfig] = Array()
   var replicationID: String = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb"
   var replicationOffset: Long = 0
 
@@ -18,8 +30,6 @@ object Config {
       case "host" => host
       case "port" => port.toString
       case "role" => role
-      case "master-host" => masterHost.toString
-      case "master-port" => masterPort.toString
       case "replication-id" => replicationID
       case "replication-offset" => replicationOffset.toString
       case _ => ""
@@ -36,8 +46,10 @@ object Config {
         case "--replicaof" =>
           role = "slave"
           val relatedMaster = args(i + 1).split(" ")
-          masterHost = Some(relatedMaster(0))
-          masterPort = Some(relatedMaster(1).toInt)
+          masterConfig = Some(new MasterConfig {
+            masterHost = relatedMaster(0)
+            masterPort = relatedMaster(1).toInt
+          })
         case _ =>
       }
     }
